@@ -25,6 +25,9 @@ For agents (all take --json):
                 [--id <id>] [--owner personal|project|org] [--applies-to <glob>...]
                 [--enforcement prompt|lint|hook] [--check <cmd>] [--conflicts <id>...]
   prefs skill show | path     print the agent skill bundled with this CLI, or its path
+
+For harness hooks:
+  prefs hook session-start [--json]   refresh stale personal files, warn about a stale AGENTS.md; always exits 0
 `;
 
 function summary(r: Rule) {
@@ -159,6 +162,36 @@ async function main(argv: string[]): Promise<number> {
       }
       apply(p);
       out({ ok: true, written: files, warnings: p.warnings }, files.length ? p.outputs.map((o) => describe(ctx, o)).join("\n") : "prefs outputs are up to date");
+      return 0;
+    }
+    case "hook": {
+      // `prefs hook session-start`: what the Amp plugin and the Claude Code hook run. It runs the
+      // --check plan, rewrites stale personal overlays (untracked, so always safe), and only warns
+      // about the shared AGENTS.md block, which the user commits. Never fails the session.
+      if (rest[0] !== "session-start") throw new UsageError("usage: prefs hook session-start [--json]");
+      ({ values } = parseArgs({ args: rest.slice(1), options: opts, strict: true }));
+      const report: { refreshed: string[]; stale: string[]; warnings: string[]; error?: string } = { refreshed: [], stale: [], warnings: [] };
+      try {
+        const ctx = loadContext();
+        const p = plan(ctx);
+        report.warnings = p.warnings;
+        report.stale = p.outputs.filter((o) => o.kind === "shared").map((o) => describe(ctx, o).replace(/^\w+ /, ""));
+        if (p.outputs.some((o) => o.kind === "personal")) {
+          const personal = plan(ctx, { only: "personal" });
+          apply(personal);
+          report.refreshed = personal.outputs.map((o) => describe(ctx, o));
+        }
+      } catch (e) {
+        if (!/not inside a git repository/.test((e as Error).message)) report.error = (e as Error).message;
+      }
+      const lines = [
+        ...(report.refreshed.length ? [`prefs: refreshed personal rule files: ${report.refreshed.join("; ")}`] : []),
+        ...(report.stale.length ? [`prefs: ${report.stale.join(", ")} is out of date with the approved shared rules; run \`prefs compile\` and commit the result.`] : []),
+        ...report.warnings.map((w) => `prefs: warning: ${w}`),
+        ...(report.error ? [`prefs: ${report.error}`] : []),
+      ];
+      if (values.json) console.log(JSON.stringify(report, null, 2));
+      else if (lines.length) console.log(lines.join("\n"));
       return 0;
     }
     default:

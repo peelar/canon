@@ -72,6 +72,15 @@ If the repo has neither `AGENTS.md` nor `CLAUDE.md`, prefs writes one excluded `
 
 Run `prefs` in a repo. It opens on the review queue (candidates at every level); Tab switches to active rules and to all rules. The right pane shows the selected rule's statement, rationale, scope, enforcement, provenance links, and file; Enter shows it full width. Keys: `a` approve, `r` reject (asks for a reason), `t` retire (asks for a reason), `e` edit the record in `$EDITOR` (an edited active rule gets a new version), `c` compile, `q` quit. Built on [OpenTUI](https://github.com/anomalyco/opentui) with its React bindings, like Hunk.
 
+## Harness plugin
+
+Both integrations run `prefs hook session-start`, which does the `--check` plan, rewrites stale personal overlays (untracked files, so always safe to rewrite), and only warns about a stale shared block in `AGENTS.md`, because that file is committed and the user should see the change. It always exits 0 and stays silent when everything is fresh.
+
+- **Amp**: copy or symlink `plugins/amp/prefs.ts` to `~/.config/amp/plugins/prefs.ts` and run `plugins: reload`. On `session.start` it runs the hook in the workspace root and shows a notification when it refreshed or found something stale. `amp plugins list` loads it (`events: session.start`); it has not been exercised in a live session yet.
+- **Claude Code**: merge `plugins/claude/settings.json` into `~/.claude/settings.json`. The SessionStart hook's stdout goes into Claude's context, so a stale `AGENTS.md` warning reaches the agent too.
+
+Neither harness documents whether guidance files are read before or after the session-start event fires, so a refresh may only show up in the next session.
+
 ## Commands
 
 ```text
@@ -84,6 +93,7 @@ prefs list [--all | --status s,…] [--owner level] [--json]   default: active a
 prefs show <id> [--json]
 prefs propose --statement … --why … --provenance <url>… [--id] [--owner] [--applies-to <glob>…] [--json]
 prefs skill show | path
+prefs hook session-start [--json]                             used by the harness plugins
 ```
 
 `approve`, `reject`, and `retire` refuse to run without a terminal on stdin (set `PREFS_HUMAN=1` to script them). That is a speed bump, not a security boundary; the skill is what tells agents not to approve.
