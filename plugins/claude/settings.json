@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "command -v prefs >/dev/null 2>&1 && prefs hook session-start; true"
+            "command": "command -v canon >/dev/null 2>&1 && canon hook session-start; true"
           }
         ]
       }

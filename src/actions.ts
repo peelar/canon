@@ -34,7 +34,7 @@ export function propose(ctx: Context, p: Proposal): Rule {
   const enforcement = (p.enforcement ?? "prompt") as Enforcement;
   if (!ENFORCEMENTS.includes(enforcement)) throw new UsageError(`--enforcement must be one of ${ENFORCEMENTS.join(", ")}`);
   const dir = ctx.dirs[owner];
-  if (!dir) throw new UsageError("no org prefs directory: set PREFS_ORG_DIR or org_dir in ~/.config/prefs/config.toml");
+  if (!dir) throw new UsageError("no org canon directory: set CANON_ORG_DIR or org_dir in ~/.config/canon/config.toml");
   const id = p.id ?? slugify(p.statement);
   if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new UsageError("--id must be lowercase letters, digits, and dashes");
   const existing = loadRules(ctx).find((r) => r.id === id);

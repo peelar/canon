@@ -178,7 +178,7 @@ function App({ ctx, quit }: { ctx: Context; quit: () => void }) {
     <box flexDirection="column" width="100%" height="100%">
       <box flexDirection="row" paddingLeft={1} paddingRight={1} backgroundColor="#1f2335">
         <text>
-          <strong fg="#7aa2f7">prefs</strong>
+          <strong fg="#7aa2f7">canon</strong>
           <span fg={DIM}>{`  ${ctx.key}  ·  `}</span>
           <span fg={COLOR.candidate}>{`${queue} awaiting review`}</span>
         </text>

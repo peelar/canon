@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "prefs",
+      "name": "canon",
       "dependencies": {
         "@opentui/core": "^0.9.2",
         "@opentui/react": "^0.9.2",

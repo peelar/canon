@@ -10,7 +10,7 @@ export function git(cwd: string, ...args: string[]): { ok: boolean; out: string 
 }
 
 export const home = () => process.env.HOME || homedir();
-export const prefsHome = () => join(home(), ".config", "prefs");
+export const canonHome = () => join(home(), ".config", "canon");
 
 /**
  * `git@github.com:peelar/imp.git`, `https://github.com/peelar/imp`, and
@@ -35,8 +35,8 @@ export interface Context {
 }
 
 function orgDir(): string | undefined {
-  if (process.env.PREFS_ORG_DIR) return resolve(process.env.PREFS_ORG_DIR);
-  const cfg = join(prefsHome(), "config.toml");
+  if (process.env.CANON_ORG_DIR) return resolve(process.env.CANON_ORG_DIR);
+  const cfg = join(canonHome(), "config.toml");
   if (!existsSync(cfg)) return undefined;
   const dir = (parse(readFileSync(cfg, "utf8")) as { org_dir?: string }).org_dir;
   return dir ? resolve(dir.replace(/^~(?=\/|$)/, home())) : undefined;
@@ -53,7 +53,7 @@ export function loadContext(cwd = process.cwd()): Context {
     cwd,
     root,
     key,
-    dirs: { project: join(root, ".prefs"), org: orgDir(), personal: join(prefsHome(), "repos", key) },
+    dirs: { project: join(root, ".canon"), org: orgDir(), personal: join(canonHome(), "repos", key) },
     excludePath: resolve(root, excl),
   };
 }

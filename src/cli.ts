@@ -9,25 +9,25 @@ import { isCompiled, STATUSES, type Rule } from "./records";
 
 const SKILL_PATH = join(import.meta.dir, "..", "skill", "SKILL.md");
 
-const HELP = `prefs: coding-agent conventions as records with a lifecycle, compiled into each harness's files.
+const HELP = `canon: coding-agent conventions as records with a lifecycle, compiled into each harness's files.
 
 For people:
-  prefs                       open the review queue (same as prefs tui)
-  prefs approve <id>          candidate -> active (or active -> enforced), bump version, compile
-  prefs reject <id> --reason <text>
-  prefs retire <id> --reason <text>
-  prefs compile [--check] [--only personal]
+  canon                       open the review queue (same as canon tui)
+  canon approve <id>          candidate -> active (or active -> enforced), bump version, compile
+  canon reject <id> --reason <text>
+  canon retire <id> --reason <text>
+  canon compile [--check] [--only personal]
 
 For agents (all take --json):
-  prefs list [--all | --status <s,...>] [--owner <level>]
-  prefs show <id>
-  prefs propose --statement <text> --why <text> --provenance <url> [--provenance <url>...]
+  canon list [--all | --status <s,...>] [--owner <level>]
+  canon show <id>
+  canon propose --statement <text> --why <text> --provenance <url> [--provenance <url>...]
                 [--id <id>] [--owner personal|project|org] [--applies-to <glob>...]
                 [--enforcement prompt|lint|hook] [--check <cmd>] [--conflicts <id>...]
-  prefs skill show | path     print the agent skill bundled with this CLI, or its path
+  canon skill show | path     print the agent skill bundled with this CLI, or its path
 
 For harness hooks:
-  prefs hook session-start [--json]   refresh stale personal files, warn about a stale AGENTS.md; always exits 0
+  canon hook session-start [--json]   refresh stale personal files, warn about a stale AGENTS.md; always exits 0
 `;
 
 function summary(r: Rule) {
@@ -36,9 +36,9 @@ function summary(r: Rule) {
 }
 
 function humanOnly(cmd: string) {
-  if (process.stdin.isTTY || process.env.PREFS_HUMAN === "1") return;
+  if (process.stdin.isTTY || process.env.CANON_HUMAN === "1") return;
   throw new UsageError(
-    `prefs ${cmd} is for people: run it in a terminal, or review in \`prefs tui\`. Agents suggest rules with \`prefs propose\`.`,
+    `canon ${cmd} is for people: run it in a terminal, or review in \`canon tui\`. Agents suggest rules with \`canon propose\`.`,
   );
 }
 
@@ -64,7 +64,7 @@ async function main(argv: string[]): Promise<number> {
     case undefined:
     case "tui": {
       if (!process.stdout.isTTY || !process.stdin.isTTY) {
-        if (cmd) throw new UsageError("prefs tui is the interactive review queue and needs a terminal; agents use `prefs list --json`");
+        if (cmd) throw new UsageError("canon tui is the interactive review queue and needs a terminal; agents use `canon list --json`");
         console.log(HELP);
         return 0;
       }
@@ -81,7 +81,7 @@ async function main(argv: string[]): Promise<number> {
       const sub = rest[0];
       if (sub === "path") console.log(SKILL_PATH);
       else if (sub === "show") process.stdout.write(readFileSync(SKILL_PATH, "utf8"));
-      else throw new UsageError("usage: prefs skill show | prefs skill path");
+      else throw new UsageError("usage: canon skill show | canon skill path");
       return 0;
     }
     case "list": {
@@ -96,7 +96,7 @@ async function main(argv: string[]): Promise<number> {
     case "show": {
       const { values: v, positionals } = parseArgs({ args: rest, options: opts, strict: true, allowPositionals: true });
       values = v;
-      if (!positionals[0]) throw new UsageError("usage: prefs show <id>");
+      if (!positionals[0]) throw new UsageError("usage: canon show <id>");
       const r = findRule(loadContext(), positionals[0]);
       out({ rule: { ...toJSON(r), compiled: isCompiled(r) } }, `${readFileSync(r.path, "utf8")}\n(${r.path})`);
       return 0;
@@ -131,7 +131,7 @@ async function main(argv: string[]): Promise<number> {
         check: v.check,
         conflicts: v.conflicts,
       });
-      out({ rule: toJSON(r) }, `proposed candidate ${r.id} at ${r.path}\nA person reviews it with \`prefs\` (the TUI) or \`prefs approve ${r.id}\`.`);
+      out({ rule: toJSON(r) }, `proposed candidate ${r.id} at ${r.path}\nA person reviews it with \`canon\` (the TUI) or \`canon approve ${r.id}\`.`);
       return 0;
     }
     case "approve":
@@ -140,7 +140,7 @@ async function main(argv: string[]): Promise<number> {
       const { values: v, positionals } = parseArgs({ args: rest, options: opts, strict: true, allowPositionals: true });
       values = v;
       const id = positionals[0];
-      if (!id) throw new UsageError(`usage: prefs ${cmd} <id>${cmd === "approve" ? "" : " --reason <text>"}`);
+      if (!id) throw new UsageError(`usage: canon ${cmd} <id>${cmd === "approve" ? "" : " --reason <text>"}`);
       humanOnly(cmd);
       const ctx = loadContext();
       const r = cmd === "approve" ? approve(ctx, id) : cmd === "reject" ? reject(ctx, id, String(v.reason ?? "")) : retire(ctx, id, String(v.reason ?? ""));
@@ -153,22 +153,22 @@ async function main(argv: string[]): Promise<number> {
       if (values.only && values.only !== "personal" && values.only !== "shared") throw new UsageError("--only must be personal or shared");
       const ctx = loadContext();
       const p = plan(ctx, { only: values.only as "personal" | "shared" | undefined });
-      for (const w of p.warnings) console.error(`prefs: warning: ${w}`);
+      for (const w of p.warnings) console.error(`canon: warning: ${w}`);
       const files = p.outputs.map((o) => ({ path: o.path, kind: o.kind, action: o.content === null ? "remove" : "write" }));
       if (values.check) {
         const stale = p.outputs.map((o) => `  ${describe(ctx, o).replace(/^wrote|^removed/, (m) => (m === "wrote" ? "would write" : "would remove"))}`);
-        out({ ok: !files.length, stale: files, warnings: p.warnings }, files.length ? `prefs outputs are stale; run \`prefs compile\`:\n${stale.join("\n")}` : "prefs outputs are up to date");
+        out({ ok: !files.length, stale: files, warnings: p.warnings }, files.length ? `canon outputs are stale; run \`canon compile\`:\n${stale.join("\n")}` : "canon outputs are up to date");
         return files.length ? 1 : 0;
       }
       apply(p);
-      out({ ok: true, written: files, warnings: p.warnings }, files.length ? p.outputs.map((o) => describe(ctx, o)).join("\n") : "prefs outputs are up to date");
+      out({ ok: true, written: files, warnings: p.warnings }, files.length ? p.outputs.map((o) => describe(ctx, o)).join("\n") : "canon outputs are up to date");
       return 0;
     }
     case "hook": {
-      // `prefs hook session-start`: what the Amp plugin and the Claude Code hook run. It runs the
+      // `canon hook session-start`: what the Amp plugin and the Claude Code hook run. It runs the
       // --check plan, rewrites stale personal overlays (untracked, so always safe), and only warns
       // about the shared AGENTS.md block, which the user commits. Never fails the session.
-      if (rest[0] !== "session-start") throw new UsageError("usage: prefs hook session-start [--json]");
+      if (rest[0] !== "session-start") throw new UsageError("usage: canon hook session-start [--json]");
       ({ values } = parseArgs({ args: rest.slice(1), options: opts, strict: true }));
       const report: { refreshed: string[]; stale: string[]; warnings: string[]; error?: string } = { refreshed: [], stale: [], warnings: [] };
       try {
@@ -185,10 +185,10 @@ async function main(argv: string[]): Promise<number> {
         if (!/not inside a git repository/.test((e as Error).message)) report.error = (e as Error).message;
       }
       const lines = [
-        ...(report.refreshed.length ? [`prefs: refreshed personal rule files: ${report.refreshed.join("; ")}`] : []),
-        ...(report.stale.length ? [`prefs: ${report.stale.join(", ")} is out of date with the approved shared rules; run \`prefs compile\` and commit the result.`] : []),
-        ...report.warnings.map((w) => `prefs: warning: ${w}`),
-        ...(report.error ? [`prefs: ${report.error}`] : []),
+        ...(report.refreshed.length ? [`canon: refreshed personal rule files: ${report.refreshed.join("; ")}`] : []),
+        ...(report.stale.length ? [`canon: ${report.stale.join(", ")} is out of date with the approved shared rules; run \`canon compile\` and commit the result.`] : []),
+        ...report.warnings.map((w) => `canon: warning: ${w}`),
+        ...(report.error ? [`canon: ${report.error}`] : []),
       ];
       if (values.json) console.log(JSON.stringify(report, null, 2));
       else if (lines.length) console.log(lines.join("\n"));
@@ -205,7 +205,7 @@ main(process.argv.slice(2)).then(
   (e: Error) => {
     const usage = e instanceof UsageError || (e as { code?: string }).code?.startsWith("ERR_PARSE_ARGS");
     if (json) console.log(JSON.stringify({ error: e.message }));
-    console.error(e.message.startsWith("prefs") ? e.message : `prefs: ${e.message}`);
+    console.error(e.message.startsWith("canon") ? e.message : `canon: ${e.message}`);
     process.exit(usage ? 2 : 1);
   },
 );
