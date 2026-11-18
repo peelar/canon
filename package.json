@@ -21,5 +21,10 @@
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
     "typescript": "^7.0.2"
+  },
+  "description": "Coding-agent rules as records you approve, compiled for Amp, Claude Code, and Codex.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peelar/canon.git"
   }
 }

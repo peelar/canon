@@ -13,4 +13,4 @@ Before anything else, load them and follow them:
 canon skill show
 ```
 
-If `canon` is not on PATH, ask the user to install it (clone the canon repo, then `bun install && bun link`).
+If `canon` is not on PATH, ask the user to install it: clone https://github.com/peelar/canon, then run `bun install && bun link`.
