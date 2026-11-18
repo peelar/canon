@@ -59,6 +59,16 @@ async function main(argv: string[]): Promise<number> {
 
   switch (cmd) {
     case undefined:
+    case "tui": {
+      if (!process.stdout.isTTY || !process.stdin.isTTY) {
+        if (cmd) throw new UsageError("prefs tui is the interactive review queue and needs a terminal; agents use `prefs list --json`");
+        console.log(HELP);
+        return 0;
+      }
+      const { runTui } = await import("./tui");
+      await runTui(loadContext());
+      return 0;
+    }
     case "help":
     case "--help":
     case "-h":

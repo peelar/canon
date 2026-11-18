@@ -68,6 +68,10 @@ If the repo has neither `AGENTS.md` nor `CLAUDE.md`, prefs writes one excluded `
 
 `prefs compile --check` exits 1 when any output is stale, for example after `AGENTS.md` changed under an override. `--only personal` rewrites just the personal overlays and leaves tracked files alone.
 
+## TUI
+
+Run `prefs` in a repo. It opens on the review queue (candidates at every level); Tab switches to active rules and to all rules. The right pane shows the selected rule's statement, rationale, scope, enforcement, provenance links, and file; Enter shows it full width. Keys: `a` approve, `r` reject (asks for a reason), `t` retire (asks for a reason), `e` edit the record in `$EDITOR` (an edited active rule gets a new version), `c` compile, `q` quit. Built on [OpenTUI](https://github.com/anomalyco/opentui) with its React bindings, like Hunk.
+
 ## Commands
 
 ```text
